@@ -26,6 +26,22 @@
 (define-constant MIN-COHERENCE-THRESHOLD u500)
 (define-constant TIMELINE-STABILITY-FACTOR u42)
 (define-constant CONSCIOUSNESS-AMPLIFICATION-BASE u100)
+(define-constant MAX-COHERENCE u1000)
+(define-constant MAX-PROBABILITY u1000)
+
+;; ========================================================================
+;; UTILITY FUNCTIONS
+;; ========================================================================
+
+;; Helper function to get minimum of two uints
+(define-private (min-uint (a uint) (b uint))
+  (if (< a b) a b)
+)
+
+;; Helper function to get maximum of two uints
+(define-private (max-uint (a uint) (b uint))
+  (if (> a b) a b)
+)
 
 ;; ========================================================================
 ;; DATA STRUCTURES
@@ -47,7 +63,7 @@
     amplification-nodes: (list 10 principal),
     current-energy: uint,
     required-energy: uint,
-    manifestation-state: (string-ascii 20),
+    manifestation-state: (string-ascii 25),
     outcome-probability: uint,
     quantum-entanglements: (list 5 uint),
     consciousness-signature: (buff 32)
@@ -111,7 +127,7 @@
     primary-timeline: uint,
     alternative-branches: (list 7 uint),
     probability-weights: (list 7 uint),
-    manifestation-outcomes: (list 7 (string-ascii 20)),
+    manifestation-outcomes: (list 7 (string-ascii 25)),
     quantum-interference-level: uint,
     timeline-stability: uint,
     consciousness-observers: (list 15 principal),
@@ -173,7 +189,7 @@
     (
       (current-profile (unwrap! (map-get? consciousness-profiles { user: tx-sender }) ERR-NOT-AUTHORIZED))
       (expansion-points (+ (* meditation-depth practice-intensity) u50))
-      (new-coherence (min u1000 (+ (get coherence-rating current-profile) (/ expansion-points u10))))
+      (new-coherence (min-uint MAX-COHERENCE (+ (get coherence-rating current-profile) (/ expansion-points u10))))
     )
     (ok (map-set consciousness-profiles
       { user: tx-sender }
@@ -286,7 +302,7 @@
         current-energy: u0,
         required-energy: required-energy,
         manifestation-state: "initiated",
-        outcome-probability: (min u1000 (+ probability-amp u200)),
+        outcome-probability: (min-uint MAX-PROBABILITY (+ probability-amp u200)),
         quantum-entanglements: (list),
         consciousness-signature: (sha256 quantum-sig)
       }
@@ -324,7 +340,7 @@
       (merge manifestation {
         current-energy: (+ (get current-energy manifestation) amplification-power),
         amplification-nodes: (unwrap! (as-max-len? (append current-nodes tx-sender) u10) ERR-QUANTUM-INTERFERENCE),
-        outcome-probability: (min u1000 (+ (get outcome-probability manifestation) (/ amplification-power u100))),
+        outcome-probability: (min-uint MAX-PROBABILITY (+ (get outcome-probability manifestation) (/ amplification-power u100))),
         manifestation-state: (if (>= (+ (get current-energy manifestation) amplification-power) (get required-energy manifestation))
           "energized"
           "amplifying"
@@ -498,7 +514,7 @@
       { manifestation-id: manifestation-id }
       (merge manifestation {
         current-energy: (+ (get current-energy manifestation) collective-boost),
-        outcome-probability: (min u1000 (+ (get outcome-probability manifestation) u150)),
+        outcome-probability: (min-uint MAX-PROBABILITY (+ (get outcome-probability manifestation) u150)),
         manifestation-state: "collectively-amplified"
       })
     )
@@ -534,7 +550,7 @@
       { manifestation-id: manifestation-id }
       (merge manifestation {
         manifestation-state: (if outcome-success "manifested" "dissolved"),
-        outcome-probability: (if outcome-success u1000 u0)
+        outcome-probability: (if outcome-success MAX-PROBABILITY u0)
       })
     )
 
@@ -543,8 +559,8 @@
       (
         (current-successes (get manifestation-success-rate creator-profile))
         (new-success-rate (if outcome-success
-          (min u1000 (+ current-successes u50))
-          (max u0 (- current-successes u20))
+          (min-uint MAX-PROBABILITY (+ current-successes u50))
+          (max-uint u0 (- current-successes u20))
         ))
         (consciousness-reward (if outcome-success u200 u50))
       )
@@ -564,8 +580,8 @@
     ;; Update global coherence metrics
     (var-set manifestation-success-rate
       (if outcome-success
-        (min u1000 (+ (var-get manifestation-success-rate) u5))
-        (max u0 (- (var-get manifestation-success-rate) u2))
+        (min-uint MAX-PROBABILITY (+ (var-get manifestation-success-rate) u5))
+        (max-uint u0 (- (var-get manifestation-success-rate) u2))
       )
     )
 
@@ -626,7 +642,7 @@
         (timeline-factor (if (> (get timeline-anchor manifestation-data) stacks-block-height) u100 u80))
         (amplification-nodes-count (len (get amplification-nodes manifestation-data)))
       )
-      (ok (min u1000 (+ base-probability energy-ratio coherence-boost timeline-factor (* amplification-nodes-count u20))))
+      (ok (min-uint MAX-PROBABILITY (+ base-probability energy-ratio coherence-boost timeline-factor (* amplification-nodes-count u20))))
     )
     ERR-MANIFESTATION-NOT-FOUND
   )
@@ -675,6 +691,59 @@
       (merge m2 {
         quantum-entanglements: (unwrap! (as-max-len? (append (get quantum-entanglements m2) manifestation-1) u5) ERR-QUANTUM-INTERFERENCE),
         outcome-probability: (+ (get outcome-probability m2) u50)
+      })
+    )
+
+    (ok true)
+  )
+)
+
+;; Advanced consciousness programming for reality architects
+(define-public (program-reality-matrix
+  (programming-code (buff 128))
+  (consciousness-level uint))
+  (let
+    (
+      (user-profile (unwrap! (map-get? consciousness-profiles { user: tx-sender }) ERR-NOT-AUTHORIZED))
+      (programming-power (* consciousness-level (get reality-programming-level user-profile)))
+    )
+    (asserts! (>= (get reality-programming-level user-profile) u10) ERR-NOT-AUTHORIZED)
+    (asserts! (>= consciousness-level u5) ERR-INSUFFICIENT-COHERENCE)
+
+    ;; Update user's reality programming capabilities
+    (map-set consciousness-profiles
+      { user: tx-sender }
+      (merge user-profile {
+        reality-programming-level: (+ (get reality-programming-level user-profile) u2),
+        consciousness-expansion-points: (+ (get consciousness-expansion-points user-profile) programming-power),
+        quantum-resonance-frequency: (+ (get quantum-resonance-frequency user-profile) u50)
+      })
+    )
+
+    ;; Update global quantum field resonance
+    (var-set quantum-field-resonance (+ (var-get quantum-field-resonance) (/ programming-power u100)))
+    (var-set active-reality-programmers (+ (var-get active-reality-programmers) u1))
+
+    (ok programming-power)
+  )
+)
+
+;; Emergency quantum field stabilization
+(define-public (stabilize-quantum-field (field-id uint))
+  (let
+    (
+      (field-data (unwrap! (map-get? quantum-fields { field-id: field-id }) ERR-NOT-AUTHORIZED))
+      (user-profile (unwrap! (map-get? consciousness-profiles { user: tx-sender }) ERR-NOT-AUTHORIZED))
+    )
+    (asserts! (is-eq tx-sender (get field-creator field-data)) ERR-NOT-AUTHORIZED)
+    (asserts! (>= (get reality-programming-level user-profile) u8) ERR-NOT-AUTHORIZED)
+
+    ;; Stabilize field harmonics and reduce interference
+    (map-set quantum-fields
+      { field-id: field-id }
+      (merge field-data {
+        field-harmonics: u528,
+        coherence-stability: (+ (get coherence-stability field-data) u100)
       })
     )
 
